@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aurora Editor</title>
+
+    <!-- CodeMirror -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/codemirror.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/mode/htmlmixed/htmlmixed.min.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: #000; /* Fundo preto */
+            color: #fff; /* Texto branco */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            width: 100%;
+            padding: 15px 0;
+        }
+
+        button {
+            background: linear-gradient(45deg, #FF007A, #FF56B2); /* Botão rosa */
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: linear-gradient(45deg, #FF56B2, #FF007A);
+            transform: translateY(-2px);
+        }
+
+        .editor-container {
+            display: flex;
+            width: 90%;
+            height: 80vh;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .CodeMirror {
+            flex: 1;
+            height: 100%;
+            font-size: 16px;
+            background: #222; /* Fundo do editor preto */
+            color: #fff; /* Texto branco */
+            border-radius: 10px;
+        }
+
+        iframe {
+            flex: 1;
+            border: none;
+            background: white;
+            border-radius: 10px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        /* Ajustes para telas em modo retrato */
+        @media (max-width: 768px) and (orientation: portrait) {
+            button {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="buttons">
+        <button onclick="openFile()">Abrir Arquivo</button>
+        <button onclick="saveFile()">Salvar</button>
+        <button onclick="updatePreview()">▶ Play</button>
+        <button onclick="goBack()">Voltar</button>
+    </div>
+
+    <div class="editor-container">
+        <textarea id="codeEditor"></textarea>
+        <iframe id="preview"></iframe>
+    </div>
+
+    <input type="file" id="fileInput">
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const projectName = urlParams.get("project") || "default";
+        const storageKey = `project_${projectName}_content`;
+
+        const editor = CodeMirror.fromTextArea(document.getElementById("codeEditor"), {
+            mode: "htmlmixed",
+            theme: "default",
+            lineNumbers: true,
+            matchBrackets: true,
+            autoCloseBrackets: true,
+            autoCloseTags: true
+        });
+
+        const preview = document.getElementById("preview");
+        const fileInput = document.getElementById("fileInput");
+
+        editor.setValue(localStorage.getItem(storageKey) || "");
+
+        function updatePreview() {
+            preview.srcdoc = editor.getValue();
+            localStorage.setItem(storageKey, editor.getValue());
+        }
+
+        function openFile() {
+            fileInput.click();
+        }
+
+        fileInput.addEventListener("change", (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    editor.setValue(e.target.result);
+                    localStorage.setItem(storageKey, e.target.result);
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        function saveFile() {
+            const fileName = prompt("Digite o nome do arquivo:", "index.html");
+            if (!fileName) return;
+
+            const blob = new Blob([editor.getValue()], { type: "text/html" });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = fileName;
+
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            alert(`Arquivo salvo! Verifique na pasta "Downloads".`);
+        }
+
+        function goBack() {
+            window.location.href = "index.html";
+        }
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aurora Engine</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #121212;
+            color: white;
+        }
+
+        #title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 20px;
+            background: linear-gradient(45deg, #FF007A, #00A8E8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        #project-list {
+            width: 90%;
+            max-width: 600px;
+            margin-top: 20px;
+        }
+
+        .project {
+            background: #1E1E2E;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .project img {
+            width: 50px;
+            height: 50px;
+            border-radius: 5px;
+        }
+
+        .project h3 {
+            margin: 0;
+            font-size: 16px;
+            color: white;
+            flex-grow: 1;
+        }
+
+        .project-type-html {
+            color: red;  /* HTML ficará vermelho */
+        }
+
+        .project-type-blocos {
+            color: blue;  /* Blocos ficará azul */
+        }
+
+        #buttons-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-button {
+            width: 60px;
+            height: 60px;
+            color: white;
+            font-size: 30px;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(255, 0, 122, 0.5);
+        }
+
+        #add-button {
+            background: #FF007A;
+        }
+
+        #delete-button {
+            background: #FF007A;
+        }
+
+        #input-container {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            background: #1E1E2E;
+            padding: 10px;
+            display: none;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        #project-name {
+            border: 1px solid #ccc;
+            padding: 5px;
+            width: 150px;
+            background: #121212;
+            color: white;
+            border-radius: 5px;
+            maxlength: 20;
+        }
+
+        #confirm-button {
+            background: #00A8E8;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-left: 5px;
+        }
+
+        #choice-container {
+            display: none;
+            flex-direction: column;
+            background: #1E1E2E;
+            padding: 10px;
+            border-radius: 8px;
+            position: fixed;
+            bottom: 150px;
+            right: 20px;
+        }
+
+        .choice-button {
+            padding: 10px;
+            margin: 5px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 16px;
+            width: 100px;
+        }
+
+        #html-button {
+            background: #00A8E8;
+            color: white;
+        }
+
+        #blocks-button {
+            background: #FF007A;
+            color: white;
+        }
+
+        #error-message {
+            color: red;
+            margin-top: 10px;
+            display: none;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1 id="title">Aurora Engine</h1>
+
+    <div id="project-list"></div>
+
+    <div id="buttons-container">
+        <button id="add-button" class="action-button">+</button>
+        <button id="delete-button" class="action-button">🗑️</button>
+    </div>
+
+    <div id="input-container">
+        <input type="text" id="project-name" placeholder="Nome do projeto" maxlength="20">
+        <button id="confirm-button">OK</button>
+    </div>
+
+    <div id="choice-container">
+        <button id="html-button" class="choice-button">HTML</button>
+        <button id="blocks-button" class="choice-button">Blocos</button>
+    </div>
+
+    <div id="error-message">Já existe um projeto com este nome!</div>
+
+    <script>
+        const addButton = document.getElementById("add-button");
+        const deleteButton = document.getElementById("delete-button");
+        const inputContainer = document.getElementById("input-container");
+        const projectNameInput = document.getElementById("project-name");
+        const confirmButton = document.getElementById("confirm-button");
+        const projectList = document.getElementById("project-list");
+        const choiceContainer = document.getElementById("choice-container");
+        const htmlButton = document.getElementById("html-button");
+        const blocksButton = document.getElementById("blocks-button");
+        const errorMessage = document.getElementById("error-message");
+
+        let projects = JSON.parse(localStorage.getItem("projects")) || [];
+        let newProjectName = "";
+        let deleteMode = false;
+
+        function loadProjects() {
+            projectList.innerHTML = "";
+            projects.forEach((project, index) => addProjectToList(project.name, project.type, index));
+        }
+
+        function saveProjects() {
+            localStorage.setItem("projects", JSON.stringify(projects));
+        }
+
+        function addProjectToList(name, type, index) {
+            const projectDiv = document.createElement("div");
+            projectDiv.classList.add("project");
+
+            const projectImage = document.createElement("img");
+            projectImage.src = "https://raw.githubusercontent.com/nexusofcia/aurora/refs/heads/main/20250204_175510_0000.png";
+
+            const projectTitle = document.createElement("h3");
+            projectTitle.innerHTML = `${name} <span class="project-type-${type.toLowerCase()}">(${type})</span>`;  // Colocando os parênteses
+
+            if (deleteMode) {
+                projectDiv.style.backgroundColor = "red"; // Fica vermelho durante o modo de deletar
+            }
+
+            projectDiv.addEventListener("click", () => {
+                if (deleteMode) {
+                    const confirmDelete = confirm("Você tem certeza que deseja excluir este projeto?");
+                    if (confirmDelete) {
+                        projects.splice(index, 1);
+                        saveProjects();
+                        loadProjects();
+                    }
+                } else {
+                    if (type === "HTML") {
+                        window.location.href = `editor.html?project=${name}`;
+                    } else if (type === "Blocos") {
+                        window.location.href = `blocos.html?project=${name}`;
+                    }
+                }
+            });
+
+            projectDiv.appendChild(projectImage);
+            projectDiv.appendChild(projectTitle);
+            projectList.appendChild(projectDiv);
+        }
+
+        confirmButton.addEventListener("click", () => {
+            newProjectName = projectNameInput.value.trim();
+            if (!newProjectName) return;
+
+            // Verifica se já existe um projeto com o mesmo nome
+            if (projects.some(p => p.name === newProjectName)) {
+                errorMessage.style.display = "block";
+                return;
+            }
+
+            inputContainer.style.display = "none";
+            choiceContainer.style.display = "flex";
+            errorMessage.style.display = "none";
+            projectNameInput.value = "";
+        });
+
+        htmlButton.addEventListener("click", () => {
+            projects.push({ name: newProjectName, type: "HTML" });
+            saveProjects();
+            loadProjects();
+            choiceContainer.style.display = "none";
+        });
+
+        blocksButton.addEventListener("click", () => {
+            projects.push({ name: newProjectName, type: "Blocos" });
+            saveProjects();
+            loadProjects();
+            choiceContainer.style.display = "none";
+        });
+
+        addButton.addEventListener("click", () => {
+            inputContainer.style.display = "block";
+        });
+
+        deleteButton.addEventListener("click", () => {
+            deleteMode = !deleteMode;  // Alterna o modo de deletar
+            loadProjects(); // Recarrega a lista de projetos para aplicar o modo de deletar
+        });
+
+        loadProjects();
+    </script>
+
+</body>
+</html>
