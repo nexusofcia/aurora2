@@ -89,6 +89,7 @@
         <button onclick="openFile()">Abrir Arquivo</button>
         <button onclick="saveFile()">Salvar</button>
         <button onclick="updatePreview()">▶ Play</button>
+        <button onclick="clearEditor()">🗑 Limpar</button>
         <button onclick="goBack()">Voltar</button>
     </div>
 
@@ -153,6 +154,13 @@
             document.body.removeChild(a);
 
             alert(`Arquivo salvo! Verifique na pasta "Downloads".`);
+        }
+
+        function clearEditor() {
+            if (confirm("Tem certeza que deseja limpar o editor? Isso removerá todo o código.")) {
+                editor.setValue("");
+                localStorage.removeItem(storageKey);
+            }
         }
 
         function goBack() {
